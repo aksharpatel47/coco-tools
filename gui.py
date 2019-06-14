@@ -3,8 +3,8 @@ from ipywidgets import widgets
 from IPython.display import display
 from tkinter import Tk, filedialog
 import os
-from wutils.image import InferImage
-from wutils.tf_record import write_inference_record
+from tools.image import InferImage
+from tools.tf_record import write_inference_record
 import glob
 import datetime
 from subprocess import check_call

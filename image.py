@@ -1,4 +1,4 @@
-from wutils.labels import Label, LabelBox, BoundingBox
+from tools.labels import Label, LabelBox, BoundingBox
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring
 import os
