@@ -4,6 +4,39 @@ from typing import Optional
 
 BoundingBox = namedtuple('BoundingBox', ['left', 'top', 'right', 'bottom'])
 
+def hflip_label(image_width, label):
+  xmax = int(image_width) - int(label["bndbox"]["xmin"])
+  xmin = int(image_width) - int(label["bndbox"]["xmax"])
+  
+  if xmax < 0 or xmin < 0:
+    raise Exception("Zero", xmax, xmin)
+  
+  if xmax > image_width or xmin > image_width:
+    raise Exception("Out of Bounds", xmax, xmin)
+    
+  if xmin >= xmax:
+    raise Exception("Comparison", xmin, xmax)
+  
+  label["bndbox"]["xmin"] = str(xmin)
+  label["bndbox"]["xmax"] = str(xmax)
+
+
+def convert_label_dict_to_obj(data, label_map_dict):
+  boxes = []
+  scores = []
+  classes = []
+  
+  if 'object' in data:  
+    for obj in data['object']:
+      if bool(int(obj['difficult'])):
+        continue
+
+      scores.append(1.0)
+      classes.append(label_map_dict[obj['name']])
+      boxes.append([float(obj['bndbox']['ymin']),float(obj['bndbox']['xmin']),float(obj['bndbox']['xmax']),float(obj['bndbox']['ymax'])])
+
+  return {"image_id": data["filename"], "groundtruth_boxes": boxes, "groundtruth_scores": scores, "groundtruth_classes": classes}
+  
 
 def get_bb_size(bb):
     width = bb.right - bb.left
