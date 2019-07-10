@@ -11,11 +11,11 @@ import tensorflow as tf
 from object_detection.utils import dataset_util, label_map_util
 from PIL import Image
 
-from .dataset import ImageDataSet
+from dataset import ImageDataSet
 # from .image import Image
-from .labels import (convert_label_dict_to_obj, convert_labels_to_names,
-                     get_data_obj_from_xml, get_label_category_dict,
-                     hflip_label)
+from labels import (convert_label_dict_to_obj, convert_labels_to_names,
+                    get_data_obj_from_xml, get_label_category_dict,
+                    hflip_label)
 
 
 def create_tf_record(data, key, encoded_jpg, label_map_dict, flipped=False, ignore_difficult_instances=True):
@@ -119,13 +119,16 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
     label_categories_dict = get_label_category_dict(label_dict)
 
     for inp in inputs:
-        all_input_xmls = glob.glob(os.path.join(inp.folder_name, "**", "*.xml"), recursive=True)
-        all_input_xmls = list(filter(lambda x: os.path.isfile(x.replace(".xml", ".jpg")), all_input_xmls))
+        all_input_xmls = glob.glob(os.path.join(
+            inp.folder_name, "**", "*.xml"), recursive=True)
+        all_input_xmls = list(filter(lambda x: os.path.isfile(
+            x.replace(".xml", ".jpg")), all_input_xmls))
 
         for xml_file in all_input_xmls:
             data = get_data_obj_from_xml(xml_file)
             convert_labels_to_names(data, label_dict, label_categories_dict)
-            tf_examples = dict_to_tf_example(data, inp.folder_name, label_dict, inp.image_augmentation)
+            tf_examples = dict_to_tf_example(
+                data, inp.folder_name, label_dict, inp.image_augmentation)
 
             for tfe in tf_examples:
                 writer.write(tfe.SerializeToString())
