@@ -32,7 +32,8 @@ if __name__ == "__main__":
             ImageDataSet(
                 "merged_intersection_inference",
                 "https://www.dropbox.com/s/8tkjwy6mzdkw4qw/merged_intersection_inference.zip?dl=1",
-                ["default"]
+                ["default"],
+                is_ground_truth=True
             )
         ])
     ]

@@ -1,6 +1,6 @@
 from collections import namedtuple
 import os
-from typing import Optional
+from typing import Optional, List
 from lxml import etree
 from object_detection.utils import dataset_util
 
@@ -32,7 +32,7 @@ def hflip_label(image_width, label):
     label["bndbox"]["xmax"] = str(xmax)
 
 
-def convert_label_dict_to_obj(data, label_map_dict):
+def convert_label_dict_to_obj(data, label_map_dict, flipped=False):
     boxes = []
     scores = []
     classes = []
@@ -47,7 +47,10 @@ def convert_label_dict_to_obj(data, label_map_dict):
             boxes.append([float(obj['bndbox']['ymin']), float(obj['bndbox']['xmin']), float(
                 obj['bndbox']['xmax']), float(obj['bndbox']['ymax'])])
 
-    return {"image_id": data["filename"], "groundtruth_boxes": boxes, "groundtruth_scores": scores, "groundtruth_classes": classes}
+    filename = data["filename"].replace(
+        ".jpg", "_flipped.jpg") if flipped else data["filename"]
+
+    return {"image_id": filename, "groundtruth_boxes": boxes, "groundtruth_scores": scores, "groundtruth_classes": classes}
 
 
 def get_data_obj_from_xml(path_str):
@@ -79,3 +82,13 @@ def convert_labels_to_names(data, label_dict, label_categories_dict):
                 data["object"].remove(lbl)
         else:
             del data["object"]
+
+
+class LabelJSON():
+    def __init__(self, label_dict: dict):
+        self.inputs = []
+        self.label_dict = label_dict
+
+    def add_data(self, data_obj, flipped=False):
+        self.inputs.append(convert_label_dict_to_obj(
+            data_obj, self.label_dict, flipped=flipped))
