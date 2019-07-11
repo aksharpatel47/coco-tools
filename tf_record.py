@@ -7,9 +7,12 @@ import os
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from typing import List
+from xml.etree.ElementTree import Comment, Element, SubElement, tostring
 
 import tensorflow as tf
 from object_detection.utils import dataset_util, label_map_util
+from object_detection.utils.label_map_util import (
+    convert_label_map_to_categories, load_labelmap)
 from PIL import Image
 
 from dataset import ImageDataSet
@@ -145,3 +148,70 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
     if len(label_json.inputs) > 0:
         with open("groundtruth.json", "w") as fd:
             json.dump(label_json.inputs, fd)
+
+
+def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
+    label_arr = convert_label_map_to_categories(load_labelmap(label_pbtxt), 2)
+    labels = {}
+
+    for val in label_arr:
+        labels[val["id"]] = val["name"]
+
+    for example in tf.python_io.tf_record_iterator(file_name):
+        json_message = tf.train.Example.FromString(example)
+        features = json_message.features.feature
+        height = features['image/height'].int64_list.value[0]
+        width = features['image/width'].int64_list.value[0]
+        scores = features['image/detection/score'].float_list.value
+        im_labels = features['image/object/class/label'].int64_list.value
+        xmin = features['image/object/bbox/xmin'].float_list.value
+        xmax = features['image/object/bbox/xmax'].float_list.value
+        ymin = features['image/object/bbox/ymin'].float_list.value
+        ymax = features['image/object/bbox/ymax'].float_list.value
+        # xmin = features['image/detection/bbox/xmin'].float_list.value
+        # xmax = features['image/detection/bbox/xmax'].float_list.value
+        # ymin = features['image/detection/bbox/ymin'].float_list.value
+        # ymax = features['image/detection/bbox/ymax'].float_list.value
+        file_name = features['image/filename'].bytes_list.value[0].decode(
+            "utf-8")
+        xannotation = Element("annotation")
+        xfilename = SubElement(xannotation, "filename")
+        xfilename.text = file_name
+        xsize = SubElement(xannotation, "size")
+        xwidth = SubElement(xsize, "width")
+        xwidth.text = str(width)
+        xheight = SubElement(xsize, "height")
+        xheight.text = str(height)
+        xdepth = SubElement(xsize, "depth")
+        xdepth.text = "3"
+        xsegmented = SubElement(xannotation, "segmented")
+        xsegmented.text = "0"
+
+        for i in range(len(im_labels)):
+            # if scores[i] > 0.5:
+            if True:
+                xobject = SubElement(xannotation, "object")
+                xname = SubElement(xobject, "name")
+                xname.text = labels[im_labels[i]]
+                xpose = SubElement(xobject, "pose")
+                xpose.text = "Unspecified"
+                xtruncated = SubElement(xobject, "truncated")
+                xtruncated.text = "0"
+                xdifficult = SubElement(xobject, "difficult")
+                xdifficult.text = "0"
+                xbndbox = SubElement(xobject, "bndbox")
+                xxmin = SubElement(xbndbox, "xmin")
+                xxmin.text = str(round(xmin[i] * width))
+                xymin = SubElement(xbndbox, "ymin")
+                xymin.text = str(round(ymin[i] * height))
+                xxmax = SubElement(xbndbox, "xmax")
+                xxmax.text = str(round(xmax[i] * width))
+                xymax = SubElement(xbndbox, "ymax")
+                xymax.text = str(round(ymax[i] * height))
+
+        xstr = tostring(xannotation)
+
+        image_name, _ = os.path.splitext(file_name)
+        new_file_path = os.path.join(output_dir, image_name + ".xml")
+        with open(new_file_path, "wb") as fd:
+            fd.write(xstr)
