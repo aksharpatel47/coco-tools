@@ -153,21 +153,23 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
 def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
     label_arr = convert_label_map_to_categories(load_labelmap(label_pbtxt), 2)
     labels = {}
+    json_data = []
 
     for val in label_arr:
         labels[val["id"]] = val["name"]
 
     for example in tf.python_io.tf_record_iterator(file_name):
+        image_data = {}
         json_message = tf.train.Example.FromString(example)
         features = json_message.features.feature
         height = features['image/height'].int64_list.value[0]
         width = features['image/width'].int64_list.value[0]
         scores = features['image/detection/score'].float_list.value
-        im_labels = features['image/object/class/label'].int64_list.value
-        xmin = features['image/object/bbox/xmin'].float_list.value
-        xmax = features['image/object/bbox/xmax'].float_list.value
-        ymin = features['image/object/bbox/ymin'].float_list.value
-        ymax = features['image/object/bbox/ymax'].float_list.value
+        im_labels = features['image/detection/label'].int64_list.value
+        xmin = features['image/detection/bbox/xmin'].float_list.value
+        xmax = features['image/detection/bbox/xmax'].float_list.value
+        ymin = features['image/detection/bbox/ymin'].float_list.value
+        ymax = features['image/detection/bbox/ymax'].float_list.value
         # xmin = features['image/detection/bbox/xmin'].float_list.value
         # xmax = features['image/detection/bbox/xmax'].float_list.value
         # ymin = features['image/detection/bbox/ymin'].float_list.value
@@ -177,6 +179,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
         xannotation = Element("annotation")
         xfilename = SubElement(xannotation, "filename")
         xfilename.text = file_name
+        image_data["image_id"] = file_name
         xsize = SubElement(xannotation, "size")
         xwidth = SubElement(xsize, "width")
         xwidth.text = str(width)
@@ -187,12 +190,20 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
         xsegmented = SubElement(xannotation, "segmented")
         xsegmented.text = "0"
 
+        boxes = []
+        scores = []
+        classes = []
+
         for i in range(len(im_labels)):
             # if scores[i] > 0.5:
             if True:
                 xobject = SubElement(xannotation, "object")
                 xname = SubElement(xobject, "name")
                 xname.text = labels[im_labels[i]]
+                classes.append(im_labels[i])
+                xscore = SubElement(xobject, "score")
+                xscore.text = scores[scores[i]]
+                scores.append(scores[i])
                 xpose = SubElement(xobject, "pose")
                 xpose.text = "Unspecified"
                 xtruncated = SubElement(xobject, "truncated")
@@ -208,6 +219,14 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
                 xxmax.text = str(round(xmax[i] * width))
                 xymax = SubElement(xbndbox, "ymax")
                 xymax.text = str(round(ymax[i] * height))
+                boxes.append([round(ymin[i] * height), round(xmin[i] * width),
+                              round(xmax[i] * width), round(ymax[i] * height)])
+
+        image_data["detection_boxes"] = boxes
+        image_data["detection_scores"] = scores
+        image_data["detection_classes"] = classes
+
+        json_data.append(image_data)
 
         xstr = tostring(xannotation)
 
@@ -215,3 +234,6 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
         new_file_path = os.path.join(output_dir, image_name + ".xml")
         with open(new_file_path, "wb") as fd:
             fd.write(xstr)
+
+    with open("detection.json", "w") as fd:
+        json.dump(json_data, fd)
