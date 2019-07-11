@@ -153,13 +153,13 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
 def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
     label_arr = convert_label_map_to_categories(load_labelmap(label_pbtxt), 2)
     labels = {}
-    json_data = []
+    json_data = list()
 
     for val in label_arr:
         labels[val["id"]] = val["name"]
 
     for example in tf.python_io.tf_record_iterator(tfrecord):
-        image_data = {}
+        image_data = dict()
         json_message = tf.train.Example.FromString(example)
         features = json_message.features.feature
         height = features['image/height'].int64_list.value[0]
@@ -190,9 +190,9 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
         xsegmented = SubElement(xannotation, "segmented")
         xsegmented.text = "0"
 
-        boxes = []
-        lbl_scores = []
-        classes = []
+        boxes = list()
+        lbl_scores = list()
+        classes = list()
 
         for i in range(len(im_labels)):
             # if scores[i] > 0.5:
@@ -232,8 +232,15 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
 
         image_name, _ = os.path.splitext(file_name)
         new_file_path = os.path.join(output_dir, image_name + ".xml")
-        with open(new_file_path, "wb") as fd:
-            fd.write(xstr)
+        # with open(new_file_path, "wb") as fd:
+        #     fd.write(xstr)
+
+    # print(json_data)
 
     with open("detection.json", "w") as fd:
         json.dump(json_data, fd)
+
+
+if __name__ == "__main__":
+    export_tfrecord_to_xmls(
+        "fws-inference_fws_faster_rcnn_inference_2019_07_11T14_49_45_561620.record", "output_xmls", "labels.pbtxt")
