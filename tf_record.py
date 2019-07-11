@@ -202,7 +202,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
                 xname.text = labels[im_labels[i]]
                 classes.append(im_labels[i])
                 xscore = SubElement(xobject, "score")
-                xscore.text = scores[scores[i]]
+                xscore.text = str(scores[i])
                 scores.append(scores[i])
                 xpose = SubElement(xobject, "pose")
                 xpose.text = "Unspecified"
