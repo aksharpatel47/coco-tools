@@ -158,7 +158,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
     for val in label_arr:
         labels[val["id"]] = val["name"]
 
-    for example in tf.python_io.tf_record_iterator(file_name):
+    for example in tf.python_io.tf_record_iterator(tfrecord):
         image_data = {}
         json_message = tf.train.Example.FromString(example)
         features = json_message.features.feature
