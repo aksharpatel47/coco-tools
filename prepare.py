@@ -38,4 +38,5 @@ if __name__ == "__main__":
         ])
     ]
 
-    prepare_records(collections, "sample_files/labels.pbtxt")
+    prepare_records(
+        collections, "https://www.dropbox.com/s/g2zdgl1mvtrl9s0/walksignal.pbtxt?dl=1")
