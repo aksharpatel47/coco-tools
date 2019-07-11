@@ -232,8 +232,8 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
 
         image_name, _ = os.path.splitext(file_name)
         new_file_path = os.path.join(output_dir, image_name + ".xml")
-        # with open(new_file_path, "wb") as fd:
-        #     fd.write(xstr)
+        with open(new_file_path, "wb") as fd:
+            fd.write(xstr)
 
     # print(json_data)
 
