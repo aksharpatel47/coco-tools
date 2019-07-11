@@ -191,7 +191,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
         xsegmented.text = "0"
 
         boxes = []
-        scores = []
+        lbl_scores = []
         classes = []
 
         for i in range(len(im_labels)):
@@ -203,7 +203,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
                 classes.append(im_labels[i])
                 xscore = SubElement(xobject, "score")
                 xscore.text = str(scores[i])
-                scores.append(scores[i])
+                lbl_scores.append(scores[i])
                 xpose = SubElement(xobject, "pose")
                 xpose.text = "Unspecified"
                 xtruncated = SubElement(xobject, "truncated")
