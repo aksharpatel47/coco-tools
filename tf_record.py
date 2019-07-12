@@ -150,8 +150,9 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
             json.dump(label_json.inputs, fd)
 
 
-def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
-    label_arr = convert_label_map_to_categories(load_labelmap(label_pbtxt), 2)
+def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, num_categories: int):
+    label_arr = convert_label_map_to_categories(
+        load_labelmap(label_pbtxt), num_categories)
     labels = {}
     json_data = list()
 
@@ -223,7 +224,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
                               round(xmax[i] * width), round(ymax[i] * height)])
 
         image_data["detection_boxes"] = boxes
-        image_data["detection_scores"] = scores
+        image_data["detection_scores"] = lbl_scores
         image_data["detection_classes"] = classes
 
         json_data.append(image_data)
@@ -243,4 +244,4 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str):
 
 if __name__ == "__main__":
     export_tfrecord_to_xmls(
-        "fws-inference_fws_faster_rcnn_inference_2019_07_11T14_49_45_561620.record", "output_xmls", "labels.pbtxt")
+        "cwcc_faster_rcnn_inference_2019_07_12T15_28_12_809811.record", "output_xmls", "labels.pbtxt", 3)
