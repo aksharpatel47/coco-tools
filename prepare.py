@@ -38,5 +38,15 @@ if __name__ == "__main__":
         ])
     ]
 
+    collections = [
+        ImageCollection("infer", [
+            ImageDataSet(
+                "sample_files/sample_infer_dataset",
+                "none",
+                ["default"]
+            ),
+        ])
+    ]
+
     prepare_records(
         collections, "https://www.dropbox.com/s/g2zdgl1mvtrl9s0/walksignal.pbtxt?dl=1")

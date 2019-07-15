@@ -1,25 +1,29 @@
+import sys
+import os
+from object_detection.utils import label_map_util, dataset_util
+from labels import (LabelJSON, convert_label_dict_to_obj,
+                    convert_labels_to_names, get_data_obj_from_xml,
+                    get_label_category_dict, hflip_label)
+from dataset import ImageDataSet
+from PIL import Image
+from object_detection.utils.label_map_util import (
+    convert_label_map_to_categories, load_labelmap)
+from object_detection.utils import dataset_util, label_map_util
 import copyreg
 import glob
 import hashlib
 import io
 import json
-import os
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from typing import List
 from xml.etree.ElementTree import Comment, Element, SubElement, tostring
-
+import numpy as np
 import tensorflow as tf
-from object_detection.utils import dataset_util, label_map_util
-from object_detection.utils.label_map_util import (
-    convert_label_map_to_categories, load_labelmap)
-from PIL import Image
+from image import InferImage
 
-from dataset import ImageDataSet
+
 # from .image import Image
-from labels import (LabelJSON, convert_label_dict_to_obj,
-                    convert_labels_to_names, get_data_obj_from_xml,
-                    get_label_category_dict, hflip_label)
 
 
 def create_tf_record(data, key, encoded_jpg, label_map_dict, flipped=False, ignore_difficult_instances=True):
@@ -130,18 +134,25 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
         all_input_xmls = list(filter(lambda x: os.path.isfile(
             x.replace(".xml", ".jpg")), all_input_xmls))
 
-        for xml_file in all_input_xmls:
-            data = get_data_obj_from_xml(xml_file)
-            convert_labels_to_names(data, label_dict, label_categories_dict)
+        if len(all_input_xmls) > 0:
+            for xml_file in all_input_xmls:
+                data = get_data_obj_from_xml(xml_file)
+                convert_labels_to_names(data, label_dict, label_categories_dict)
 
-            if inp.is_ground_truth:
-                label_json.add_data(data)
+                if inp.is_ground_truth:
+                    label_json.add_data(data)
 
-            tf_examples = dict_to_tf_example(
-                data, inp.folder_name, label_dict, inp.image_augmentation)
+                tf_examples = dict_to_tf_example(
+                    data, inp.folder_name, label_dict, inp.image_augmentation)
 
-            for tfe in tf_examples:
-                writer.write(tfe.SerializeToString())
+                for tfe in tf_examples:
+                    writer.write(tfe.SerializeToString())
+        else:
+            all_input_images = glob.glob(os.path.join(inp.folder_name, "**", "*.jpg"), recursive=True)
+
+            for input_image in all_input_images:
+                im = InferImage(input_image)
+                writer.write(im.tfrecord.SerializeToString())
 
     writer.close()
 
@@ -240,8 +251,3 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
 
     with open("detection.json", "w") as fd:
         json.dump(json_data, fd)
-
-
-if __name__ == "__main__":
-    export_tfrecord_to_xmls(
-        "cwcc_faster_rcnn_inference_2019_07_12T15_28_12_809811.record", "output_xmls", "labels.pbtxt", 3)
