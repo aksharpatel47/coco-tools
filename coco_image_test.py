@@ -1,4 +1,4 @@
-from image import InferImage
+from coco_image import InferImage
 
 def test_image_width_height():
     im = InferImage("sample_files/im.jpg")
