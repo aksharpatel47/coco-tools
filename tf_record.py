@@ -142,6 +142,11 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
                 if inp.is_ground_truth:
                     label_json.add_data(data)
 
+                difficult_labels = filter(lambda x: x == '1', map(lambda x: x.difficult, data["object"]))
+
+                if len(difficult_labels) > 0:
+                    continue
+
                 try:
                     tf_examples = dict_to_tf_example(
                         data, inp.folder_name, label_dict, inp.image_augmentation)
