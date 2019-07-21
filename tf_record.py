@@ -137,13 +137,15 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
         if len(all_input_xmls) > 0:
             for xml_file in all_input_xmls:
                 data = get_data_obj_from_xml(xml_file)
-                convert_labels_to_names(data, label_dict, label_categories_dict)
+                convert_labels_to_names(
+                    data, label_dict, label_categories_dict)
 
                 if inp.is_ground_truth:
                     label_json.add_data(data)
 
                 if data.get("object"):
-                    difficult_labels = list(filter(lambda x: x == '1', map(lambda x: x["difficult"], data["object"])))
+                    difficult_labels = list(filter(lambda x: x == '1', map(
+                        lambda x: x["difficult"], data["object"])))
 
                     if len(difficult_labels) > 0:
                         continue
@@ -156,7 +158,8 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
                 except:
                     print(data)
         else:
-            all_input_images = glob.glob(os.path.join(inp.folder_name, "**", "*.jpg"), recursive=True)
+            all_input_images = glob.glob(os.path.join(
+                inp.folder_name, "**", "*.jpg"), recursive=True)
 
             for input_image in all_input_images:
                 im = InferImage(input_image)
@@ -190,10 +193,6 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
         xmax = features['image/detection/bbox/xmax'].float_list.value
         ymin = features['image/detection/bbox/ymin'].float_list.value
         ymax = features['image/detection/bbox/ymax'].float_list.value
-        # xmin = features['image/detection/bbox/xmin'].float_list.value
-        # xmax = features['image/detection/bbox/xmax'].float_list.value
-        # ymin = features['image/detection/bbox/ymin'].float_list.value
-        # ymax = features['image/detection/bbox/ymax'].float_list.value
         file_name = features['image/filename'].bytes_list.value[0].decode(
             "utf-8")
         xannotation = Element("annotation")
