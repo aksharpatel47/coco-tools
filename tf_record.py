@@ -172,7 +172,7 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
             json.dump(label_json.inputs, fd)
 
 
-def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, num_categories: int):
+def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, num_categories: int, req_score: float = 0.5):
     label_arr = convert_label_map_to_categories(
         load_labelmap(label_pbtxt), num_categories)
     labels = {}
@@ -214,8 +214,7 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
         classes = list()
 
         for i in range(len(im_labels)):
-            # if scores[i] > 0.5:
-            if True:
+            if scores[i] > req_score:
                 xobject = SubElement(xannotation, "object")
                 xname = SubElement(xobject, "name")
                 xname.text = labels[im_labels[i]]
