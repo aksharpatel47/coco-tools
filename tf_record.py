@@ -21,6 +21,8 @@ from xml.etree.ElementTree import Comment, Element, SubElement, tostring
 import numpy as np
 import tensorflow as tf
 from coco_image import InferImage
+from collections import Counter
+import pandas as pd
 
 
 # from .image import Image
@@ -173,6 +175,9 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
 
 
 def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, num_categories: int, req_score: float = 0.5):
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
     label_arr = convert_label_map_to_categories(
         load_labelmap(label_pbtxt), num_categories)
     labels = {}
@@ -181,8 +186,12 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
     for val in label_arr:
         labels[val["id"]] = val["name"]
 
+    all_frames = []
+    all_columns = ["image_name"] + list(labels.values()) + ["total"]
+
     for example in tf.python_io.tf_record_iterator(tfrecord):
         image_data = dict()
+        
         json_message = tf.train.Example.FromString(example)
         features = json_message.features.feature
         height = features['image/height'].int64_list.value[0]
@@ -212,12 +221,15 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
         boxes = list()
         lbl_scores = list()
         classes = list()
+        image_data_array = [file_name] + [0]*num_categories + [0]
+        c = Counter()
 
         for i in range(len(im_labels)):
             if scores[i] > req_score:
                 xobject = SubElement(xannotation, "object")
                 xname = SubElement(xobject, "name")
                 xname.text = labels[im_labels[i]]
+                c[im_labels[i]] += 1
                 classes.append(im_labels[i])
                 xscore = SubElement(xobject, "score")
                 xscore.text = str(scores[i])
@@ -246,14 +258,30 @@ def export_tfrecord_to_xmls(tfrecord: str, output_dir: str, label_pbtxt: str, nu
 
         json_data.append(image_data)
 
+        # Updating data in image_data_array
+        for k, v in c.items():
+            image_data_array[k] = v
+            image_data_array[-1] += v
+
+        all_frames.append(pd.DataFrame([image_data_array], columns=all_columns))
+
         xstr = tostring(xannotation)
 
         image_name, _ = os.path.splitext(file_name)
         new_file_path = os.path.join(output_dir, image_name + ".xml")
-        with open(new_file_path, "wb") as fd:
-            fd.write(xstr)
+        # with open(new_file_path, "wb") as fd:
+        #     fd.write(xstr)
 
     # print(json_data)
 
+    print("Writing detection.json")
     with open("detection.json", "w") as fd:
         json.dump(json_data, fd)
+
+    print("Writing features.csv")
+    features_df = pd.concat(all_frames)
+    features_df.to_csv("features.csv", index=False)
+
+
+if __name__ == "__main__":
+    export_tfrecord_to_xmls(f"fws_faster_rcnn_inference_2019_07_23T19_40_24_592652.record", "fws_faster_rcnn_inference_2019_07_23T19_40_24_592652", "labels.pbtxt", 2, 0.5)
