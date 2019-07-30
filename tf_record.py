@@ -90,8 +90,9 @@ def dict_to_tf_example(data,
                        label_map_dict,
                        image_types):
     image_subdirectory = ""
+    image_folder = "" if data["folder"] == dataset_directory else data["folder"]
     img_path = os.path.join(
-        data['folder'], image_subdirectory, data['filename'])
+        image_folder, image_subdirectory, data['filename'])
     full_path = os.path.join(dataset_directory, img_path)
 
     examples = []
@@ -129,6 +130,7 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
     label_categories_dict = get_label_category_dict(label_dict)
 
     label_json = LabelJSON(label_dict)
+    error_count = 0
 
     for inp in inputs:
         all_input_xmls = glob.glob(os.path.join(
@@ -158,7 +160,8 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
                     for tfe in tf_examples:
                         writer.write(tfe.SerializeToString())
                 except:
-                    print(data)
+                    # print(data)
+                    error_count += 1
         else:
             all_input_images = glob.glob(os.path.join(
                 inp.folder_name, "**", "*.jpg"), recursive=True)
@@ -168,6 +171,7 @@ def write_tf_record(inputs: List[ImageDataSet], label_path: str, output_file: st
                 writer.write(im.tfrecord.SerializeToString())
 
     writer.close()
+    print("Error Count: ", error_count)
 
     if len(label_json.inputs) > 0:
         with open("groundtruth.json", "w") as fd:
