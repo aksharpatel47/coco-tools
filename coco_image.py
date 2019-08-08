@@ -9,7 +9,7 @@ from object_detection.utils import dataset_util
 import io
 from enum import Enum
 from typing import List
-from labels import get_data_obj_from_xml
+from .labels import get_data_obj_from_xml
 from xml.etree.ElementTree import Comment, Element, SubElement, tostring
 
 

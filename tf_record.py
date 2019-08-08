@@ -1,10 +1,10 @@
 import sys
 import os
 from object_detection.utils import label_map_util, dataset_util
-from labels import (LabelJSON, convert_label_dict_to_obj,
+from .labels import (LabelJSON, convert_label_dict_to_obj,
                     convert_labels_to_names, get_data_obj_from_xml,
                     get_label_category_dict, hflip_label)
-from dataset import ImageDataSet
+from .dataset import ImageDataSet
 from PIL import Image
 from object_detection.utils.label_map_util import (
     convert_label_map_to_categories, load_labelmap)

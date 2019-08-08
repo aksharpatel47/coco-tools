@@ -1,6 +1,6 @@
-from dataset import ImageDataSet, ImageCollection
+from .dataset import ImageDataSet, ImageCollection
 from typing import List
-from tf_record import write_tf_record
+from .tf_record import write_tf_record
 import requests
 
 
@@ -15,38 +15,51 @@ def prepare_records(collections: List[ImageCollection], labels_url: str):
 
 
 if __name__ == "__main__":
+    prefix = "fbike"
+    
     collections = [
-        ImageCollection("training", [
-            ImageDataSet(
-                "WalkSignLabel",
-                "https://www.dropbox.com/s/hwpdrib721g34l4/WalkSignLabel.zip?dl=1",
-                ["default", "flipped"]
-            ),
-            ImageDataSet(
-                "merged_intersection_inference",
-                "https://www.dropbox.com/s/8tkjwy6mzdkw4qw/merged_intersection_inference.zip?dl=1",
-                ["flipped"]
-            )
-        ]),
-        ImageCollection("validation", [
-            ImageDataSet(
-                "merged_intersection_inference",
-                "https://www.dropbox.com/s/8tkjwy6mzdkw4qw/merged_intersection_inference.zip?dl=1",
-                ["default"],
-                is_ground_truth=True
-            )
-        ])
+        ImageCollection(
+         name = f"{prefix}_training", 
+         datasets = [
+           ImageDataSet(
+               "Phoennix_BikeSymbol_training",
+               "https://www.dropbox.com/s/swazixfufqzhu91/BikesymbolTraining.zip?dl=1",
+               ["default", "flipped"]
+           ),
+         ]
+     ),
+     ImageCollection(
+         name = f"{prefix}_validation", 
+         datasets = [
+           ImageDataSet(
+               "Phoenix_BikeSymbol_validation",
+               "https://www.dropbox.com/s/gfdlrvej995bksi/BikeSymbolTest.zip?dl=1",
+               ["default"],
+               is_ground_truth = True
+           )
+         ]
+     ),
+     ImageCollection(
+         name = f"{prefix}_test", 
+         datasets = [
+           ImageDataSet(
+               "Phoenix_BikeSymbol_inference",
+               "https://www.dropbox.com/s/gfdlrvej995bksi/BikeSymbolTest.zip?dl=1",
+               ["default"]
+           )
+         ]
+    ),
     ]
 
-    collections = [
-        ImageCollection("infer", [
-            ImageDataSet(
-                "sample_files/sample_infer_dataset",
-                "none",
-                ["default"]
-            ),
-        ])
-    ]
+    # collections = [
+    #     ImageCollection("infer", [
+    #         ImageDataSet(
+    #             "sample_files/sample_infer_dataset",
+    #             "none",
+    #             ["default"]
+    #         ),
+    #     ])
+    # ]
 
     prepare_records(
-        collections, "https://www.dropbox.com/s/g2zdgl1mvtrl9s0/walksignal.pbtxt?dl=1")
+        collections, "https://www.dropbox.com/s/nry88tesw5ae6zi/bikelabels.pbtxt?dl=1")
