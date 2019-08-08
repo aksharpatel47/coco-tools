@@ -20,7 +20,7 @@ from typing import List
 from xml.etree.ElementTree import Comment, Element, SubElement, tostring
 import numpy as np
 import tensorflow as tf
-from coco_image import InferImage
+from .coco_image import InferImage
 from collections import Counter
 import pandas as pd
 
