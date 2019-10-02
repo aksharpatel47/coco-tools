@@ -3,14 +3,11 @@ import requests
 from zipfile import ZipFile
 from typing import List
 import shutil
+import urllib.request as req
 
 
 def download_file(url, downloaded_file_name):
-    zf = requests.get(url, stream=True)
-    with open(downloaded_file_name, "wb") as fd:
-        for chunk in zf.iter_content():
-            fd.write(chunk)
-
+    req.urlretrieve(url, downloaded_file_name)
 
 class ImageDataSet():
     def __init__(self, folder_name: str, url: str, image_augmentation: List[str], is_ground_truth: bool = False):
