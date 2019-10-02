@@ -6,7 +6,7 @@ import shutil
 
 
 def download_file(url, downloaded_file_name):
-    zf = requests.get(url, stream=False)
+    zf = requests.get(url, stream=True)
     with open(downloaded_file_name, "wb") as fd:
         for chunk in zf.iter_content():
             fd.write(chunk)
