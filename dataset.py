@@ -6,8 +6,10 @@ import shutil
 
 
 def download_file(url, downloaded_file_name):
-    zf = requests.get(url)
-    open(downloaded_file_name, "wb").write(zf.content)
+    zf = requests.get(url, stream=False)
+    with open(downloaded_file_name, "wb") as fd:
+        for chunk in zf.iter_content():
+            fd.write(chunk)
 
 
 class ImageDataSet():
